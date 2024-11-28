@@ -42,7 +42,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="EzBudget.cs" />
+    <Compile Include="EzBudgetForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MicroServiceAClient.cs" />
+    <Compile Include="MicroServiceDClient.cs" />
+    <Compile Include="MicroServiceCClient.cs" />
+    <Compile Include="MicroServiceBClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ScaleForms2.cs" />
   </ItemGroup>

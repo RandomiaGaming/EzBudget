@@ -4,12 +4,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
 
-public sealed class ParsedChaseImport
-{
-    public double[] Amounts;
-    public string[] Descriptions;
-}
-public static class MicroServiceBClient
+public static class MicroServiceCClient
 {
     // Json Schemas
     private sealed class BlankJsonSchema
@@ -70,27 +65,23 @@ public static class MicroServiceBClient
         _port = -1;
     }
     // Custom HTTP Post Client Stuff
-    private static readonly string MicroServicePath = "D:\\ImportantData\\School\\EzBudget\\MicroServiceB\\bin\\Debug\\MicroServiceB.exe";
-    private sealed class ChaseImportInputJsonSchema
+    private static readonly string MicroServicePath = "D:\\ImportantData\\School\\EzBudget\\MicroServiceC\\bin\\Debug\\MicroServiceC.exe";
+    private sealed class GetCompanyNameInputJsonSchema
     {
-        public string chaseCSV;
+        public string description;
     }
-    private sealed class ChaseImportOutputJsonSchema
+    private sealed class GetCompanyNameOutputJsonSchema
     {
         public string status;
-        public double[] amounts;
-        public string[] descriptions;
+        public string companyName;
     }
-    public static ParsedChaseImport ChaseImport(string chaseCSV)
+    public static string GetCompanyName(string description)
     {
-        ChaseImportInputJsonSchema input = new ChaseImportInputJsonSchema();
-        input.chaseCSV = chaseCSV;
+        GetCompanyNameInputJsonSchema input = new GetCompanyNameInputJsonSchema();
+        input.description = description;
         string inputJson = JsonConvert.SerializeObject(input);
-        string outputJson = SendRequest("ChaseImport", inputJson);
-        ChaseImportOutputJsonSchema output = JsonConvert.DeserializeObject<ChaseImportOutputJsonSchema>(outputJson);
-        ParsedChaseImport parsedOutput = new ParsedChaseImport();
-        parsedOutput.Amounts = output.amounts;
-        parsedOutput.Descriptions = output.descriptions;
-        return parsedOutput;
+        string outputJson = SendRequest("GetCompanyName", inputJson);
+        GetCompanyNameOutputJsonSchema output = JsonConvert.DeserializeObject<GetCompanyNameOutputJsonSchema>(outputJson);
+        return output.companyName;
     }
 }

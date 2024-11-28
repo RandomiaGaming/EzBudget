@@ -19,7 +19,7 @@ public static class MicroServiceAClient
     {
         public string chart;
     }
-    public static Bitmap SendRequest(ChartType chartType, double[] data, string[] labels, string title)
+    public static Bitmap GenerateChart(ChartType chartType, double[] data, string[] labels, string title)
     {
         // Create request
         RequestJsonSchema request = new RequestJsonSchema();

@@ -11,35 +11,35 @@ namespace MicroServiceD
 {
     public static class Program
     {
-        public const string LogoDatasetPath = "D:\\ImportantData\\School\\EzBudget\\MicroServiceD\\dataset";
-
+        private const int OverridePort = -1; // 8003
+        private const string LogoDatasetPath = "D:\\ImportantData\\School\\EzBudget\\MicroServiceD\\dataset";
         // Json Schemas
-        public sealed class BlankJsonSchema
+        private sealed class BlankJsonSchema
         {
 
         }
-        public sealed class StatusJsonSchema
+        private sealed class StatusJsonSchema
         {
             public string status;
         }
-        public sealed class GetCompanyLogoInputJsonSchema
+        private sealed class GetCompanyLogoInputJsonSchema
         {
             public string companyName;
         }
-        public sealed class GetCompanyLogoOutputJsonSchema
+        private sealed class GetCompanyLogoOutputJsonSchema
         {
             public string status;
             public string companyLogo;
         }
         // Functions
-        public static string Check(string inputJson)
+        private static string Check(string inputJson)
         {
             BlankJsonSchema input = JsonConvert.DeserializeObject<BlankJsonSchema>(inputJson);
             StatusJsonSchema output = new StatusJsonSchema();
             output.status = "OK";
             return JsonConvert.SerializeObject(output);
         }
-        public static string Exit(string inputJson)
+        private static string Exit(string inputJson)
         {
             BlankJsonSchema input = JsonConvert.DeserializeObject<BlankJsonSchema>(inputJson);
             ExitRequested = true;
@@ -47,18 +47,21 @@ namespace MicroServiceD
             output.status = "OK";
             return JsonConvert.SerializeObject(output);
         }
-        public static string GetCompanyLogo(string inputJson)
+        private static string GetCompanyLogo(string inputJson)
         {
             GetCompanyLogoInputJsonSchema input = JsonConvert.DeserializeObject<GetCompanyLogoInputJsonSchema>(inputJson);
 
             Bitmap logo = new Bitmap(Path.Combine(LogoDatasetPath, "DefaultIcon.png"));
-            foreach (string file in Directory.GetFiles(LogoDatasetPath))
+            if (input.companyName != null)
             {
-                string fileName = Path.GetFileNameWithoutExtension(file);
-                if (input.companyName.ToLower().Replace(" ", "") == fileName.ToLower().Replace(" ", ""))
+                foreach (string file in Directory.GetFiles(LogoDatasetPath))
                 {
-                    logo.Dispose();
-                    logo = new Bitmap(file);
+                    string fileName = Path.GetFileNameWithoutExtension(file);
+                    if (input.companyName.ToLower().Replace(" ", "") == fileName.ToLower().Replace(" ", ""))
+                    {
+                        logo.Dispose();
+                        logo = new Bitmap(file);
+                    }
                 }
             }
 
@@ -70,10 +73,10 @@ namespace MicroServiceD
             return JsonConvert.SerializeObject(output);
         }
         // Status Variables
-        public static int Port = -1;
-        public static bool ExitRequested = false;
+        private static int Port = -1;
+        private static bool ExitRequested = false;
         // Main Helper Functions
-        public static int PortFromArgs(string[] args)
+        private static int PortFromArgs(string[] args)
         {
             int output = -1;
             for (int i = 0; i < args.Length; i++)
@@ -96,7 +99,7 @@ namespace MicroServiceD
             }
             return output;
         }
-        public static int GetFreePort()
+        private static int GetFreePort()
         {
             int output = -1;
             TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
@@ -105,7 +108,7 @@ namespace MicroServiceD
             listener.Stop();
             return output;
         }
-        public static string ProcessMessage(string endpoint, string inputJson)
+        private static string ProcessMessage(string endpoint, string inputJson)
         {
             endpoint = endpoint.ToLower();
             if (endpoint == "/Check".ToLower())
@@ -125,7 +128,7 @@ namespace MicroServiceD
                 return "{\"status\":\"Bad endpoint.\"}";
             }
         }
-        public static void RunOnPort(int port)
+        private static void RunOnPort(int port)
         {
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add($"http://localhost:{port}/");
@@ -177,7 +180,14 @@ namespace MicroServiceD
         {
             try
             {
-                Port = PortFromArgs(args);
+                if (OverridePort != -1)
+                {
+                    Port = OverridePort;
+                }
+                else
+                {
+                    Port = PortFromArgs(args);
+                }
                 if (Port == -1)
                 {
                     Console.WriteLine($"No port given. Selecting random...");

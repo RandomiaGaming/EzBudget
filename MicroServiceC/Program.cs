@@ -10,35 +10,35 @@ namespace MicroServiceC
 {
     public static class Program
     {
+        private const int OverridePort = -1; // 8002
         private static readonly string[] CompanyNames = new string[] { "Walmart", "Amazon", "Apple", "United Health", "Berkshire Hathaway", "CVS", "ExxonMobil", "Alphabet", "Google", "McKesson", "Cencora", "Costco", "Chase", "Microsoft", "Cardinal", "Chevron", "Cigna", "Ford", "Bank Of America", "General Motors", "Elevance Health", "Citigroup", "Centene", "Home Depot", "Marathon", "Kroger", "Phillips", "Fannie Mae", "Walgreens", "Valero", "Facebook", "Meta", "Verizon", "AT&T", "Comcast", "Wells Fargo", "Goldman Sachs", "Freddie Mac", "Target", "Humana", "State Farm", "Tesla", "Morgan Stanley", "Johnson And Johnson", "Archer Daniels Midland", "PepsiCo", "United Parcel Service", "FedEx", "Disney", "Dell", "Lowes", "Procter And Gamble", "Energy Transfer Partners", "Boeing", "Albertsons", "Sysco", "RTX Corporation", "General Electric", "Lockheed Martin", "American Express", "Caterpillar", "MetLife", "HCA Healthcare", "Progressive Corporation", "IBM", "John Deere", "Nvidia", "StoneX Group", "Merck", "ConocoPhillips", "Pfizer", "Delta", "TD Synnex", "Publix", "Allstate", "Cisco", "Nationwide Mutual Insurance Company", "Charter Communications", "AbbVie", "New York Life Insurance Company", "Intel", "TJX", "Prudential Financial", "HP", "United Airlines", "Performance Food Group", "Tyson Foods", "American Airlines", "Liberty Mutual", "Nike", "Oracle", "Enterprise Products", "Capital One", "Plains All American Pipeline", "World Kinect Corporation", "AIG", "Coca Cola", "TIAA", "CHS", "Bristol Myers Squibb", "Dow Chemical Company", "Best Buy" };
-
         // Json Schemas
-        public sealed class BlankJsonSchema
+        private sealed class BlankJsonSchema
         {
 
         }
-        public sealed class StatusJsonSchema
+        private sealed class StatusJsonSchema
         {
             public string status;
         }
-        public sealed class GetCompanyNameInputJsonSchema
+        private sealed class GetCompanyNameInputJsonSchema
         {
             public string description;
         }
-        public sealed class GetCompanyNameOutputJsonSchema
+        private sealed class GetCompanyNameOutputJsonSchema
         {
             public string status;
             public string companyName;
         }
         // Functions
-        public static string Check(string inputJson)
+        private static string Check(string inputJson)
         {
             BlankJsonSchema input = JsonConvert.DeserializeObject<BlankJsonSchema>(inputJson);
             StatusJsonSchema output = new StatusJsonSchema();
             output.status = "OK";
             return JsonConvert.SerializeObject(output);
         }
-        public static string Exit(string inputJson)
+        private static string Exit(string inputJson)
         {
             BlankJsonSchema input = JsonConvert.DeserializeObject<BlankJsonSchema>(inputJson);
             ExitRequested = true;
@@ -46,7 +46,7 @@ namespace MicroServiceC
             output.status = "OK";
             return JsonConvert.SerializeObject(output);
         }
-        public static string GetCompanyName(string inputJson)
+        private static string GetCompanyName(string inputJson)
         {
             GetCompanyNameInputJsonSchema input = JsonConvert.DeserializeObject<GetCompanyNameInputJsonSchema>(inputJson);
 
@@ -66,10 +66,10 @@ namespace MicroServiceC
             return JsonConvert.SerializeObject(output);
         }
         // Status Variables
-        public static int Port = -1;
-        public static bool ExitRequested = false;
+        private static int Port = -1;
+        private static bool ExitRequested = false;
         // Main Helper Functions
-        public static int PortFromArgs(string[] args)
+        private static int PortFromArgs(string[] args)
         {
             int output = -1;
             for (int i = 0; i < args.Length; i++)
@@ -92,7 +92,7 @@ namespace MicroServiceC
             }
             return output;
         }
-        public static int GetFreePort()
+        private static int GetFreePort()
         {
             int output = -1;
             TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
@@ -101,7 +101,7 @@ namespace MicroServiceC
             listener.Stop();
             return output;
         }
-        public static string ProcessMessage(string endpoint, string inputJson)
+        private static string ProcessMessage(string endpoint, string inputJson)
         {
             endpoint = endpoint.ToLower();
             if (endpoint == "/Check".ToLower())
@@ -121,7 +121,7 @@ namespace MicroServiceC
                 return "{\"status\":\"Bad endpoint.\"}";
             }
         }
-        public static void RunOnPort(int port)
+        private static void RunOnPort(int port)
         {
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add($"http://localhost:{port}/");
@@ -173,7 +173,14 @@ namespace MicroServiceC
         {
             try
             {
-                Port = PortFromArgs(args);
+                if (OverridePort != -1)
+                {
+                    Port = OverridePort;
+                }
+                else
+                {
+                    Port = PortFromArgs(args);
+                }
                 if (Port == -1)
                 {
                     Console.WriteLine($"No port given. Selecting random...");

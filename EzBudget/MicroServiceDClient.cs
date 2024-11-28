@@ -1,15 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 
-public sealed class ParsedChaseImport
-{
-    public double[] Amounts;
-    public string[] Descriptions;
-}
-public static class MicroServiceBClient
+public static class MicroServiceDClient
 {
     // Json Schemas
     private sealed class BlankJsonSchema
@@ -70,27 +67,27 @@ public static class MicroServiceBClient
         _port = -1;
     }
     // Custom HTTP Post Client Stuff
-    private static readonly string MicroServicePath = "D:\\ImportantData\\School\\EzBudget\\MicroServiceB\\bin\\Debug\\MicroServiceB.exe";
-    private sealed class ChaseImportInputJsonSchema
+    private static readonly string MicroServicePath = "D:\\ImportantData\\School\\EzBudget\\MicroServiceD\\bin\\Debug\\MicroServiceD.exe";
+    public sealed class GetCompanyLogoInputJsonSchema
     {
-        public string chaseCSV;
+        public string companyName;
     }
-    private sealed class ChaseImportOutputJsonSchema
+    public sealed class GetCompanyLogoOutputJsonSchema
     {
         public string status;
-        public double[] amounts;
-        public string[] descriptions;
+        public string companyLogo;
     }
-    public static ParsedChaseImport ChaseImport(string chaseCSV)
+    public static Bitmap GetCompanyLogo(string companyName)
     {
-        ChaseImportInputJsonSchema input = new ChaseImportInputJsonSchema();
-        input.chaseCSV = chaseCSV;
+        GetCompanyLogoInputJsonSchema input = new GetCompanyLogoInputJsonSchema();
+        input.companyName = companyName;
         string inputJson = JsonConvert.SerializeObject(input);
-        string outputJson = SendRequest("ChaseImport", inputJson);
-        ChaseImportOutputJsonSchema output = JsonConvert.DeserializeObject<ChaseImportOutputJsonSchema>(outputJson);
-        ParsedChaseImport parsedOutput = new ParsedChaseImport();
-        parsedOutput.Amounts = output.amounts;
-        parsedOutput.Descriptions = output.descriptions;
-        return parsedOutput;
+        string outputJson = SendRequest("GetCompanyLogo", inputJson);
+        GetCompanyLogoOutputJsonSchema output = JsonConvert.DeserializeObject<GetCompanyLogoOutputJsonSchema>(outputJson);
+        byte[] outputBytes = Convert.FromBase64String(output.companyLogo);
+        MemoryStream outputStream = new MemoryStream(outputBytes);
+        Bitmap outputBitmap = new Bitmap(outputStream);
+        outputStream.Dispose();
+        return outputBitmap;
     }
 }
