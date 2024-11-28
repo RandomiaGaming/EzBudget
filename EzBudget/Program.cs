@@ -11,6 +11,8 @@ using System.Text;
 
 public static class Program
 {
+    // New From Chase Export Button
+    // Also Bar graph by company name button
     [STAThread]
     public static void Main(string[] args)
     {
