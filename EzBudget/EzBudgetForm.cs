@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using ScaleForms;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -21,6 +22,7 @@ public sealed class EzBudgetForm : Form
     private Scaled<Button> mainScreen_saveButton = null;
     private Scaled<Button> mainScreen_undoButton = null;
     private Scaled<Button> mainScreen_redoButton = null;
+    private Scaled<Button> mainScreen_graphButton = null;
     private Scaled<Button> mainScreen_newButton = null;
     private sealed class TransactionPanel
     {
@@ -53,19 +55,19 @@ public sealed class EzBudgetForm : Form
         fileScreen_header.Control.Text = "EzBudget 1.0";
         fileScreen_header.Control.TextAlign = ContentAlignment.MiddleCenter;
 
-        fileScreen_newButton = new Scaled<Button>(fileScreen, 0, 0, 0.333, 0.1);
+        fileScreen_newButton = new Scaled<Button>(fileScreen, 0, 0, 0.333333, 0.1);
         fileScreen_newButton.Control.Font = new Font(FontFamily.GenericSansSerif, 20.0f, FontStyle.Regular);
         fileScreen_newButton.Control.Text = "New Budget";
         fileScreen_newButton.Control.Click += fileScreen_newButton_click;
         toolTip.SetToolTip(fileScreen_newButton.Control, "Creates a new blank budget. You will be asked to choose a password and file location.");
 
-        fileScreen_openButton = new Scaled<Button>(fileScreen, 0.333, 0, 0.333, 0.1);
+        fileScreen_openButton = new Scaled<Button>(fileScreen, 0.333333, 0, 0.333333, 0.1);
         fileScreen_openButton.Control.Font = new Font(FontFamily.GenericSansSerif, 20.0f, FontStyle.Regular);
         fileScreen_openButton.Control.Text = "Open Budget";
         fileScreen_openButton.Control.Click += fileScreen_openButton_click;
         toolTip.SetToolTip(fileScreen_openButton.Control, "Opens an existing budget. You will be asked so select the file location and input the password.");
 
-        fileScreen_importButton = new Scaled<Button>(fileScreen, 0.666, 0, 0.333, 0.1);
+        fileScreen_importButton = new Scaled<Button>(fileScreen, 0.666666, 0, 0.333333, 0.1);
         fileScreen_importButton.Control.Font = new Font(FontFamily.GenericSansSerif, 20.0f, FontStyle.Regular);
         fileScreen_importButton.Control.Text = "Import From Chase";
         fileScreen_importButton.Control.Click += fileScreen_importButton_click;
@@ -137,7 +139,13 @@ public sealed class EzBudgetForm : Form
             toolTip.SetToolTip(mainScreen_transactions[i].deleteButton.Control, "Click to delete a transaction. Don't worry this can be undone.");
         }
 
-        mainScreen_newButton = new Scaled<Button>(mainScreen, 0, 0, 1, 0.1);
+        mainScreen_graphButton = new Scaled<Button>(mainScreen, 0, 0, 0.5, 0.1);
+        mainScreen_graphButton.Control.Font = new Font(FontFamily.GenericSansSerif, 20.0f, FontStyle.Regular);
+        mainScreen_graphButton.Control.Text = "Spending By Company";
+        mainScreen_graphButton.Control.Click += mainScreen_graphButton_click;
+        toolTip.SetToolTip(mainScreen_graphButton.Control, "Click to show a popup graph of your spending by company.");
+
+        mainScreen_newButton = new Scaled<Button>(mainScreen, 0.5, 0, 0.5, 0.1);
         mainScreen_newButton.Control.Font = new Font(FontFamily.GenericSansSerif, 20.0f, FontStyle.Regular);
         mainScreen_newButton.Control.Text = "New Transaction";
         mainScreen_newButton.Control.Click += mainScreen_newButton_click;
@@ -157,7 +165,7 @@ public sealed class EzBudgetForm : Form
         }
         else
         {
-            return $"${value:F2}";
+            return $"+${value:F2}";
         }
     }
     private double StringToAmount(string value)
@@ -296,6 +304,46 @@ public sealed class EzBudgetForm : Form
             return;
         }
         loadedBudget.Add(0.00, "");
+        RefreshLayout();
+    }
+    private void mainScreen_graphButton_click(object sender, EventArgs e)
+    {
+        if (loadedBudget == null)
+        {
+            return;
+        }
+
+        List<string> companyNames = new List<string>();
+        List<double> totals = new List<double>();
+        for(int i = 0; i < loadedBudget.Count(); i++)
+        {
+            string companyName = MicroServiceCClient.GetCompanyName(loadedBudget.GetDescription(i));
+            if(companyName == null || companyName == "")
+            {
+                companyName = "Other";
+            }
+
+            bool found = false;
+            for (int j = 0; j < companyNames.Count; j++)
+            {
+                if (companyNames[j] == companyName)
+                {
+                    totals[j] += loadedBudget.GetAmount(i);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                companyNames.Add(companyName);
+                totals.Add(loadedBudget.GetAmount(i));
+            }
+        }
+
+        Bitmap graph = MicroServiceAClient.GenerateChart(ChartType.Bar, totals.ToArray(), companyNames.ToArray(), "Spending By Company");
+        BitmapDisplayForm.ShowBitmap(graph);
+        graph.Dispose();
+
         RefreshLayout();
     }
     private void mainScreen_saveButton_click(object sender, EventArgs e)
